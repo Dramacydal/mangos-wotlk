@@ -595,6 +595,20 @@ enum Team
     ALLIANCE            = 469,
 };
 
+enum TeamIndex
+{
+    TEAM_INDEX_ALLIANCE = 0,
+    TEAM_INDEX_HORDE,
+    TEAM_INDEX_NEUTRAL,
+};
+
+#define PVP_TEAM_COUNT    2
+
+static inline TeamIndex GetTeamIndex(Team team) { return team == ALLIANCE ? TEAM_INDEX_ALLIANCE : TEAM_INDEX_HORDE; }
+static inline Team GetTeamFromIndex(TeamIndex teamIdx) { return teamIdx == TEAM_INDEX_ALLIANCE ? ALLIANCE : HORDE; }
+static inline Team GetOtherTeam(Team team) { return team ? (team == ALLIANCE ? HORDE : ALLIANCE) : TEAM_NONE; }
+static inline TeamIndex GetOtherTeamIndex(TeamIndex teamIdx) { return teamIdx == TEAM_INDEX_ALLIANCE ? TEAM_INDEX_HORDE : TEAM_INDEX_ALLIANCE; }
+
 enum SpellEffects
 {
     SPELL_EFFECT_NONE                      = 0,

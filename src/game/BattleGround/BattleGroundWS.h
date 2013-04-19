@@ -121,7 +121,7 @@ class BattleGroundWS : public BattleGround
 
         void RespawnFlag(Team team, bool captured);
         void RespawnDroppedFlag(Team team);
-        uint8 GetFlagState(Team team) { return m_FlagState[GetTeamIndexByTeamId(team)]; }
+        uint8 GetFlagState(Team team) { return m_FlagState[GetTeamIndex(team)]; }
 
         /* Battleground Events */
         virtual void EventPlayerDroppedFlag(Player* source) override;
@@ -139,19 +139,19 @@ class BattleGroundWS : public BattleGround
         void UpdateFlagState(Team team, uint32 value);
         void UpdateTeamScore(Team team);
         void UpdatePlayerScore(Player* source, uint32 type, uint32 value) override;
-        void SetDroppedFlagGuid(ObjectGuid guid, Team team)  { m_DroppedFlagGuid[GetTeamIndexByTeamId(team)] = guid;}
-        void ClearDroppedFlagGuid(Team team)  { m_DroppedFlagGuid[GetTeamIndexByTeamId(team)].Clear();}
-        ObjectGuid const& GetDroppedFlagGuid(Team team) const { return m_DroppedFlagGuid[GetTeamIndexByTeamId(team)];}
+        void SetDroppedFlagGuid(ObjectGuid guid, Team team)  { m_DroppedFlagGuid[GetTeamIndex(team)] = guid;}
+        void ClearDroppedFlagGuid(Team team)  { m_DroppedFlagGuid[GetTeamIndex(team)].Clear();}
+        ObjectGuid const& GetDroppedFlagGuid(Team team) const { return m_DroppedFlagGuid[GetTeamIndex(team)];}
         virtual void FillInitialWorldStates(WorldPacket& data, uint32& count) override;
 
     private:
         ObjectGuid m_flagCarrierAlliance;
         ObjectGuid m_flagCarrierHorde;
 
-        ObjectGuid m_DroppedFlagGuid[BG_TEAMS_COUNT];
-        uint8 m_FlagState[BG_TEAMS_COUNT];
-        int32 m_FlagsTimer[BG_TEAMS_COUNT];
-        int32 m_FlagsDropTimer[BG_TEAMS_COUNT];
+        ObjectGuid m_DroppedFlagGuid[PVP_TEAM_COUNT];
+        uint8 m_FlagState[PVP_TEAM_COUNT];
+        int32 m_FlagsTimer[PVP_TEAM_COUNT];
+        int32 m_FlagsDropTimer[PVP_TEAM_COUNT];
 
         uint32 m_ReputationCapture;
         uint32 m_HonorWinKills;
