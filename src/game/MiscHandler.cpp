@@ -1531,19 +1531,22 @@ void WorldSession::HandleHearthandResurrect(WorldPacket& /*recv_data*/)
 {
     DEBUG_LOG("WORLD: Received opcode CMSG_HEARTH_AND_RESURRECT");
 
-    bool ok = false;
+    bool zoneOk = false;
     if (OutdoorPvP* opvp = sOutdoorPvPMgr.GetScript(_player->GetCachedZoneId()))
     {
-        if (opvp->IsBattleField() && (ok = opvp->IsMember(_player->GetObjectGuid())))
+        if (opvp->IsBattleField() && (zoneOk = opvp->IsMember(_player->GetObjectGuid())))
         {
             SendBfLeaveMessage(((BattleField*)opvp)->GetBattlefieldId(), BATTLEFIELD_LEAVE_REASON_EXITED);
             ((BattleField*)opvp)->RemovePlayerFromRaid(_player->GetObjectGuid());
         }
     }
 
-    AreaTableEntry const* atEntry = sAreaStore.LookupEntry(_player->GetAreaId());
-    if (!atEntry || !(atEntry->flags & AREA_FLAG_CAN_HEARTH_AND_RES))
-        return;
+    if (!zoneOk)
+    {
+        AreaTableEntry const* atEntry = sAreaStore.LookupEntry(_player->GetAreaId());
+        if (!atEntry || !(atEntry->flags & AREA_FLAG_CAN_HEARTH_AND_RES))
+            return;
+    }
 
     // Can't use in flight
     if (_player->IsTaxiFlying())
