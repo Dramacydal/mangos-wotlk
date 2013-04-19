@@ -53,6 +53,7 @@
 #include "BattleGround/BattleGroundMgr.h"
 #include "BattleGround/BattleGroundAV.h"
 #include "OutdoorPvP/OutdoorPvP.h"
+#include "BattleField/BattleField.h"
 #include "ArenaTeam.h"
 #include "Chat.h"
 #include "Database/DatabaseImpl.h"
@@ -1607,8 +1608,15 @@ void Player::ToggleAFK()
     ToggleFlag(PLAYER_FLAGS, PLAYER_FLAGS_AFK);
 
     // afk player not allowed in battleground
-    if (isAFK() && InBattleGround() && !InArena())
-        LeaveBattleground();
+    if (isAFK())
+        if (InBattleGround() && !InArena())
+            LeaveBattleground();
+        else
+        {
+            OutdoorPvP* opvp = sOutdoorPvPMgr.GetScript(GetCachedZoneId());
+            if (opvp && opvp->IsBattleField())
+                ((BattleField*)opvp)->HandlePlayerAFK(this);
+        }
 }
 
 void Player::ToggleDND()
@@ -4552,7 +4560,8 @@ Corpse* Player::CreateCorpse()
         flags |= CORPSE_FLAG_HIDE_HELM;
     if (HasFlag(PLAYER_FLAGS, PLAYER_FLAGS_HIDE_CLOAK))
         flags |= CORPSE_FLAG_HIDE_CLOAK;
-    if (InBattleGround() && !InArena())
+    OutdoorPvP* opvp = sOutdoorPvPMgr.GetScript(GetCachedZoneId());
+    if (InBattleGround() && !InArena() || opvp && opvp->IsBattleField() && ((BattleField*)opvp)->GetState() == BF_STATE_IN_PROGRESS && opvp->IsMember(GetObjectGuid()))
         flags |= CORPSE_FLAG_LOOTABLE;                      // to be able to remove insignia
     corpse->SetUInt32Value(CORPSE_FIELD_FLAGS, flags);
 
@@ -8004,7 +8013,8 @@ bool Player::CheckAmmoCompatibility(const ItemPrototype* ammo_proto) const
     Called by remove insignia spell effect    */
 void Player::RemovedInsignia(Player* looterPlr)
 {
-    if (!GetBattleGroundId())
+    OutdoorPvP* opvp = sOutdoorPvPMgr.GetScript(GetCachedZoneId());
+    if (!GetBattleGroundId() && (!opvp || !opvp->IsBattleField() || ((BattleField*)opvp)->GetState() != BF_STATE_IN_PROGRESS || !opvp->IsMember(GetObjectGuid())))
         return;
 
     // If not released spirit, do it !
@@ -15824,6 +15834,10 @@ bool Player::LoadFromDB(ObjectGuid guid, SqlQueryHolder* holder)
         }
     }
 
+    if (OutdoorPvP* opvp = sOutdoorPvPMgr.GetScript(fields[34].GetUInt32()))
+        if (opvp->IsBattleField())
+            ((BattleField*)opvp)->PlayerLoggedIn(this);
+
     if (transGUID != 0)
     {
         m_movementInfo.SetTransportData(ObjectGuid(HIGHGUID_MO_TRANSPORT, transGUID), fields[26].GetFloat(), fields[27].GetFloat(), fields[28].GetFloat(), fields[29].GetFloat(), 0, -1);
@@ -21513,7 +21527,7 @@ PartyResult Player::CanUninviteFromGroup() const
     return ERR_PARTY_RESULT_OK;
 }
 
-void Player::SetBattleGroundRaid(Group* group, int8 subgroup)
+void Player::SetBattleRaid(Group* group, int8 subgroup)
 {
     // we must move references from m_group to m_originalGroup
     SetOriginalGroup(GetGroup(), GetSubGroup());
@@ -22022,6 +22036,11 @@ bool Player::CanStartFlyInArea(uint32 mapid, uint32 zone, uint32 area) const
 
     if (v_map == 571 && !HasSpell(54197))   // Cold Weather Flying
         return false;
+
+    // Disallow mounting in wintergrasp when battle is in progress
+    if (OutdoorPvP* opvp = sOutdoorPvPMgr.GetScript(zone))
+        if (opvp->IsBattleField())
+            return ((BattleField*)opvp)->GetState() != BF_STATE_IN_PROGRESS;
 
     // don't allow flying in Dalaran restricted areas
     // (no other zones currently has areas with AREA_FLAG_CANNOT_FLY)

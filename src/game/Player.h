@@ -2282,7 +2282,7 @@ class MANGOS_DLL_SPEC Player : public Unit
         Player* GetNextRandomRaidMember(float radius);
         PartyResult CanUninviteFromGroup() const;
         // BattleGround Group System
-        void SetBattleGroundRaid(Group* group, int8 subgroup = -1);
+        void SetBattleRaid(Group* group, int8 subgroup = -1);
         void RemoveFromBattleGroundRaid();
         Group* GetOriginalGroup() { return m_originalGroup.getTarget(); }
         GroupReference& GetOriginalGroupRef() { return m_originalGroup; }

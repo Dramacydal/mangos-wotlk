@@ -28,6 +28,7 @@
 #include "OutdoorPvPSI.h"
 #include "OutdoorPvPTF.h"
 #include "OutdoorPvPZM.h"
+#include "BattleField/BattleField.h"
 
 INSTANTIATE_SINGLETON_1(OutdoorPvPMgr);
 
@@ -46,9 +47,29 @@ OutdoorPvPMgr::~OutdoorPvPMgr()
 #define LOAD_OPVP_ZONE(a)                                           \
     if (sWorld.getConfig(CONFIG_BOOL_OUTDOORPVP_##a##_ENABLED))     \
     {                                                               \
-        m_scripts[OPVP_ID_##a] = new OutdoorPvP##a();               \
-        ++counter;                                                  \
+        m_scripts[OPVP_ID_##a] = new OutdoorPvP##a(OPVP_ID_##a);    \
+        if (!m_scripts[OPVP_ID_##a]->InitOutdoorPvPArea())          \
+        {                                                           \
+            delete m_scripts[OPVP_ID_##a];                          \
+            m_scripts[OPVP_ID_##a] = NULL;                          \
+        }                                                           \
+        else                                                        \
+            ++counter;                                              \
     }
+
+#define LOAD_BATTLEFIELD(a)                                         \
+    if (sWorld.getConfig(CONFIG_BOOL_BATTLEFIELD_##a##_ENABLED))    \
+    {                                                               \
+        m_scripts[OPVP_ID_##a] = new BattleField##a(OPVP_ID_##a);   \
+        if (!m_scripts[OPVP_ID_##a]->InitOutdoorPvPArea())          \
+        {                                                           \
+            delete m_scripts[OPVP_ID_##a];                          \
+            m_scripts[OPVP_ID_##a] = NULL;                          \
+        }                                                           \
+        else                                                        \
+            ++counter;                                              \
+    }
+
 /**
    Function which loads all outdoor pvp scripts
  */
@@ -63,6 +84,7 @@ void OutdoorPvPMgr::InitOutdoorPvP()
     LOAD_OPVP_ZONE(TF);
     LOAD_OPVP_ZONE(NA);
     LOAD_OPVP_ZONE(GH);
+    //LOAD_BATTLEFIELD(WG)
 
     sLog.outString();
     sLog.outString(">> Loaded %u Outdoor PvP zones", counter);
@@ -86,6 +108,8 @@ OutdoorPvP* OutdoorPvPMgr::GetScript(uint32 zoneId)
             return m_scripts[OPVP_ID_NA];
         case ZONE_ID_GRIZZLY_HILLS:
             return m_scripts[OPVP_ID_GH];
+        //case ZONE_ID_WINTERGRASP:
+        //    return m_scripts[OPVP_ID_WG];
         default:
             return NULL;
     }
@@ -152,6 +176,24 @@ void OutdoorPvPMgr::HandlePlayerLeaveZone(Player* player, uint32 zoneId)
         script->HandlePlayerLeaveZone(player, false);
 }
 
+void OutdoorPvPMgr::HandlePlayerEnterArea(Player* player, uint32 zoneId, uint32 areaId)
+{
+    // teleport: called once from Player::CleanupsBeforeDelete, once from Player::UpdateZone
+    if (OutdoorPvP* script = GetScript(zoneId))
+        script->HandlePlayerEnterArea(player, areaId, true);
+    else if (OutdoorPvP* script = GetScriptOfAffectedZone(zoneId))
+        script->HandlePlayerEnterArea(player, areaId, false);
+}
+
+void OutdoorPvPMgr::HandlePlayerLeaveArea(Player* player, uint32 zoneId, uint32 areaId)
+{
+    // teleport: called once from Player::CleanupsBeforeDelete, once from Player::UpdateZone
+    if (OutdoorPvP* script = GetScript(zoneId))
+        script->HandlePlayerLeaveArea(player, areaId, true);
+    else if (OutdoorPvP* script = GetScriptOfAffectedZone(zoneId))
+        script->HandlePlayerLeaveArea(player, areaId, false);
+}
+
 void OutdoorPvPMgr::Update(uint32 diff)
 {
     m_updateTimer.Update(diff);
@@ -179,4 +221,14 @@ float OutdoorPvPMgr::GetCapturePointSliderValue(uint32 entry, float defaultValue
 
     // return default value if we can't find any
     return defaultValue;
+}
+
+BattleField* OutdoorPvPMgr::GetBattlefieldById(uint32 id)
+{
+    for (uint8 i = 0; i < MAX_OPVP_ID; ++i)
+        if (OutdoorPvP* opvp = m_scripts[i])
+            if (opvp->IsBattleField() && ((BattleField*)opvp)->GetBattlefieldId() == id)
+                return (BattleField*)opvp;
+
+    return NULL;
 }

@@ -1087,7 +1087,11 @@ void Unit::JustKilledCreature(Creature* victim, Player* responsiblePlayer)
             bg->HandleKillUnit(victim, responsiblePlayer);
     // Notify the outdoor pvp script
     if (OutdoorPvP* outdoorPvP = sOutdoorPvPMgr.GetScript(responsiblePlayer ? responsiblePlayer->GetCachedZoneId() : GetZoneId()))
+    {
         outdoorPvP->HandleCreatureDeath(victim);
+        if (responsiblePlayer)
+            outdoorPvP->HandlePlayerKill(responsiblePlayer, victim);
+    }
 
     // Start creature death script
     GetMap()->ScriptsStart(sCreatureDeathScripts, victim->GetEntry(), victim, responsiblePlayer ? responsiblePlayer : this);

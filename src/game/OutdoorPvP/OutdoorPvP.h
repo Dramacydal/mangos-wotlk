@@ -52,14 +52,14 @@ class OutdoorPvP
     friend class OutdoorPvPMgr;
 
     public:
-        OutdoorPvP() {}
+        OutdoorPvP(uint32 _id) : m_id(_id), m_isBattleField(false) {}
         virtual ~OutdoorPvP() {}
 
         // called when the zone is initialized
         virtual void FillInitialWorldStates(WorldPacket& /*data*/, uint32& /*count*/) {}
 
         // Process Capture event
-        virtual bool HandleEvent(uint32 /*eventId*/, GameObject* /*go*/) { return false; }
+        virtual bool HandleEvent(uint32 /*eventId*/, GameObject* /*go*/, Player* pInvoker = NULL, uint32 spellId = 0) { return false; }
 
         // handle capture objective complete
         virtual void HandleObjectiveComplete(uint32 /*eventId*/, std::list<Player*> /*players*/, Team /*team*/) {}
@@ -87,25 +87,37 @@ class OutdoorPvP
         virtual void Update(uint32 /*diff*/) {}
 
         // Handle player kill
-        void HandlePlayerKill(Player* killer, Player* victim);
+        void HandlePlayerKill(Player* killer, Unit* victim);
+
+        uint32 GetId() const { return m_id; }
+        bool IsBattleField() const { return m_isBattleField; }
+
+        virtual bool IsMember(ObjectGuid guid) { return true; }
+
+        virtual bool InitOutdoorPvPArea() { return true; }
+
+        // send world state update to all players present in map
+        void SendUpdateWorldStateForMap(uint32 field, uint32 value, Map* map);
 
     protected:
 
         // Player related stuff
         virtual void HandlePlayerEnterZone(Player* /*player*/, bool /*isMainZone*/);
         virtual void HandlePlayerLeaveZone(Player* /*player*/, bool /*isMainZone*/);
+        virtual void HandlePlayerEnterArea(Player* /*pPlayer*/, uint32 /*uiAreaId*/, bool /*isMainZone*/) { };
+        virtual void HandlePlayerLeaveArea(Player* /*pPlayer*/, uint32 /*uiAreaId*/, bool /*isMainZone*/) { };
 
         // remove world states
         virtual void SendRemoveWorldStates(Player* /*player*/) {}
 
         // handle npc/player kill
-        virtual void HandlePlayerKillInsideArea(Player* /*killer*/) {}
+        virtual void HandlePlayerKillInsideArea(Player* /*killer*/, Unit* /*victim*/) {}
 
         // send world state update to all players present
         void SendUpdateWorldState(uint32 field, uint32 value);
 
         // applies buff to a team inside the specific zone
-        void BuffTeam(Team team, uint32 spellId, bool remove = false);
+        void BuffTeam(Team team, uint32 spellId, bool remove = false, bool onlyMembers = true, uint32 area = 0);
 
         // get banner artkit based on controlling team
         uint32 GetBannerArtKit(Team team, uint32 artKitAlliance = CAPTURE_ARTKIT_ALLIANCE, uint32 artKitHorde = CAPTURE_ARTKIT_HORDE, uint32 artKitNeutral = CAPTURE_ARTKIT_NEUTRAL);
@@ -119,6 +131,11 @@ class OutdoorPvP
 
         // store the players inside the area
         GuidZoneMap m_zonePlayers;
+
+        // outdoor pvp type id
+        uint32 m_id;
+
+        bool m_isBattleField;
 };
 
 #endif

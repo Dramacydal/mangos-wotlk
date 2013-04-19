@@ -24,7 +24,7 @@
 #include "GameObject.h"
 #include "Player.h"
 
-OutdoorPvPHP::OutdoorPvPHP() : OutdoorPvP(),
+OutdoorPvPHP::OutdoorPvPHP(uint32 id) : OutdoorPvP(id),
     m_towersAlliance(0),
     m_towersHorde(0)
 {
@@ -144,7 +144,7 @@ void OutdoorPvPHP::HandleObjectiveComplete(uint32 eventId, std::list<Player*> pl
 }
 
 // Cast player spell on opponent kill
-void OutdoorPvPHP::HandlePlayerKillInsideArea(Player* player)
+void OutdoorPvPHP::HandlePlayerKillInsideArea(Player* player, Unit* victim)
 {
     for (uint8 i = 0; i < MAX_HP_TOWERS; ++i)
     {
@@ -165,7 +165,7 @@ void OutdoorPvPHP::HandlePlayerKillInsideArea(Player* player)
 }
 
 // process the capture events
-bool OutdoorPvPHP::HandleEvent(uint32 eventId, GameObject* go)
+bool OutdoorPvPHP::HandleEvent(uint32 eventId, GameObject* go, Player* pInvoker, uint32 spellId)
 {
     for (uint8 i = 0; i < MAX_HP_TOWERS; ++i)
     {

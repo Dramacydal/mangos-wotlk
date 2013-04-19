@@ -25,7 +25,7 @@
 #include "GameObject.h"
 #include "Player.h"
 
-OutdoorPvPZM::OutdoorPvPZM() : OutdoorPvP(),
+OutdoorPvPZM::OutdoorPvPZM(uint32 id) : OutdoorPvP(id),
     m_graveyardOwner(TEAM_NONE),
     m_graveyardWorldState(WORLD_STATE_ZM_GRAVEYARD_NEUTRAL),
     m_scoutWorldStateAlliance(WORLD_STATE_ZM_FLAG_NOT_READY_ALLIANCE),
@@ -140,7 +140,7 @@ void OutdoorPvPZM::HandleGameObjectCreate(GameObject* go)
 }
 
 // Cast player spell on opponent kill
-void OutdoorPvPZM::HandlePlayerKillInsideArea(Player* player)
+void OutdoorPvPZM::HandlePlayerKillInsideArea(Player* player, Unit* victim)
 {
     for (uint8 i = 0; i < MAX_ZM_TOWERS; ++i)
     {
@@ -161,7 +161,7 @@ void OutdoorPvPZM::HandlePlayerKillInsideArea(Player* player)
 }
 
 // process the capture events
-bool OutdoorPvPZM::HandleEvent(uint32 eventId, GameObject* go)
+bool OutdoorPvPZM::HandleEvent(uint32 eventId, GameObject* go, Player* pInvoker, uint32 spellId)
 {
     for (uint8 i = 0; i < MAX_ZM_TOWERS; ++i)
     {

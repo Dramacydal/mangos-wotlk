@@ -25,7 +25,7 @@
 #include "GameObject.h"
 #include "Player.h"
 
-OutdoorPvPNA::OutdoorPvPNA() : OutdoorPvP(),
+OutdoorPvPNA::OutdoorPvPNA(uint32 id) : OutdoorPvP(id),
     m_zoneOwner(TEAM_NONE),
     m_soldiersRespawnTimer(0),
     m_zoneWorldState(0),
@@ -95,7 +95,7 @@ void OutdoorPvPNA::HandleObjectiveComplete(uint32 eventId, std::list<Player*> pl
 }
 
 // Cast player spell on opponent kill
-void OutdoorPvPNA::HandlePlayerKillInsideArea(Player* player)
+void OutdoorPvPNA::HandlePlayerKillInsideArea(Player* player, Unit* victim)
 {
     if (GameObject* capturePoint = player->GetMap()->GetGameObject(m_capturePoint))
     {
@@ -293,7 +293,7 @@ void OutdoorPvPNA::UpdateWyvernsWorldState(uint32 value)
 }
 
 // process the capture events
-bool OutdoorPvPNA::HandleEvent(uint32 eventId, GameObject* go)
+bool OutdoorPvPNA::HandleEvent(uint32 eventId, GameObject* go, Player* pInvoker, uint32 spellId)
 {
     // If we are not using the Halaa banner return
     if (go->GetEntry() != GO_HALAA_BANNER)

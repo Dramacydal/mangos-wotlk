@@ -110,7 +110,7 @@ void WorldSession::HandleGroupInviteOpcode(WorldPacket& recv_data)
     }
 
     Group* group = GetPlayer()->GetGroup();
-    if (group && group->isBGGroup())
+    if (group && group->isBattleGroup())
         group = GetPlayer()->GetOriginalGroup();
 
     if (group && group->isRaidGroup() && !player->GetAllowLowLevelRaid() && (player->getLevel() < sWorld.getConfig(CONFIG_UINT32_MIN_LEVEL_FOR_RAID)))
@@ -127,7 +127,7 @@ void WorldSession::HandleGroupInviteOpcode(WorldPacket& recv_data)
     }
 
     Group* group2 = player->GetGroup();
-    if (group2 && group2->isBGGroup())
+    if (group2 && group2->isBattleGroup())
         group2 = player->GetOriginalGroup();
 
     // player already in another group
@@ -369,6 +369,10 @@ void WorldSession::HandleGroupDisbandOpcode(WorldPacket& /*recv_data*/)
 
     /** error handling **/
     /********************/
+
+    //if (BattleField* opvp = (BattleField*)sOutdoorPvPMgr.GetScript(ZONE_ID_WINTERGRASP))
+    //    if (opvp->IsMember(_player->GetObjectGuid()))
+    //        opvp->OnPlayerGroupDisband(_player);
 
     // everything is fine, do it
     SendPartyResult(PARTY_OP_LEAVE, GetPlayer()->GetName(), ERR_PARTY_RESULT_OK);

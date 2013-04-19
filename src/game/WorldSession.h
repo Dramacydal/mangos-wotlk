@@ -91,6 +91,14 @@ struct AddonInfo
 
 typedef std::list<AddonInfo> AddonsList;
 
+enum BattlefieldLeaveReason
+{
+    BATTLEFIELD_LEAVE_REASON_CLOSE      = 0x00000001,
+    //BATTLEFIELD_LEAVE_REASON_UNK1       = 0x00000002, (not used)
+    //BATTLEFIELD_LEAVE_REASON_UNK2       = 0x00000004, (not used)
+    BATTLEFIELD_LEAVE_REASON_EXITED     = 0x00000008,
+    BATTLEFIELD_LEAVE_REASON_LOW_LEVEL  = 0x00000010,
+};
 enum PartyOperation
 {
     PARTY_OP_INVITE = 0,
@@ -860,6 +868,16 @@ class MANGOS_DLL_SPEC WorldSession
         void HandleCalendarEventModeratorStatus(WorldPacket& recv_data);
         void HandleCalendarComplain(WorldPacket& recv_data);
         void HandleCalendarGetNumPending(WorldPacket& recv_data);
+
+        // Battlefield
+        void SendBfInvitePlayerToWar(uint32 uiBattlefieldId, uint32 uiZoneId, uint32 uiTimeToAccept);
+        void SendBfInvitePlayerToQueue(uint32 uiBattlefieldId);
+        void SendBfQueueInviteResponse(uint32 uiBattlefieldId, uint32 uiZoneId, bool bCanQueue, bool bFull);
+        void SendBfEntered(uint32 uiBattlefieldId);
+        void SendBfLeaveMessage(uint32 uiBattlefieldId, BattlefieldLeaveReason reason);
+        void HandleBfQueueInviteResponse(WorldPacket& recv_data);
+        void HandleBfEntryInviteResponse(WorldPacket& recv_data);
+        void HandleBfExitRequest(WorldPacket& recv_data);
 
         void HandleSpellClick(WorldPacket& recv_data);
         void HandleGetMirrorimageData(WorldPacket& recv_data);

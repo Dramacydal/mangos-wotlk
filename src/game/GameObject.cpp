@@ -2209,7 +2209,7 @@ void GameObject::DealGameObjectDamage(uint32 damage, uint32 spell, Unit* caster)
     if (!damage)
         return;
 
-    ForceGameObjectHealth(-int32(damage), caster);
+    ForceGameObjectHealth(-int32(damage), caster, spell);
 
     WorldPacket data(SMSG_DESTRUCTIBLE_BUILDING_DAMAGE, 9 + 9 + 9 + 4 + 4);
     data << GetPackGUID();
@@ -2225,10 +2225,10 @@ void GameObject::RebuildGameObject(uint32 spell, Unit* caster)
     MANGOS_ASSERT(GetGoType() == GAMEOBJECT_TYPE_DESTRUCTIBLE_BUILDING);
     MANGOS_ASSERT(caster);
 
-    ForceGameObjectHealth(0, caster);
+    ForceGameObjectHealth(0, caster, spell);
 }
 
-void GameObject::ForceGameObjectHealth(int32 diff, Unit* caster)
+void GameObject::ForceGameObjectHealth(int32 diff, Unit* caster, uint32 spellId)
 {
     MANGOS_ASSERT(GetGoType() == GAMEOBJECT_TYPE_DESTRUCTIBLE_BUILDING);
     MANGOS_ASSERT(caster || diff >= 0);
@@ -2266,8 +2266,15 @@ void GameObject::ForceGameObjectHealth(int32 diff, Unit* caster)
         newDisplayId = m_goInfo->displayId;
 
         // Start Event if exist
-        if (caster && m_goInfo->destructibleBuilding.intactEvent)
-            StartEvents_Event(GetMap(), m_goInfo->destructibleBuilding.intactEvent, this, caster->GetCharmerOrOwnerOrSelf(), true, caster->GetCharmerOrOwnerOrSelf());
+        if (m_goInfo->destructibleBuilding.intactEvent)
+        {
+            if (caster)
+                StartEvents_Event(GetMap(), m_goInfo->destructibleBuilding.intactEvent, this, caster->GetCharmerOrOwnerOrSelf(), true, caster->GetCharmerOrOwnerOrSelf());
+
+            if (caster && caster->GetTypeId() == TYPEID_PLAYER)
+                if (OutdoorPvP* opvp = sOutdoorPvPMgr.GetScript(((Player*)caster)->GetCachedZoneId()))
+                    opvp->HandleEvent(m_goInfo->destructibleBuilding.intactEvent, this, (Player*)caster, spellId);
+        }
     }
     else if (m_useTimes == 0)                               // Destroyed
     {
@@ -2293,8 +2300,15 @@ void GameObject::ForceGameObjectHealth(int32 diff, Unit* caster)
             }
 
             // Start Event if exist
-            if (caster && m_goInfo->destructibleBuilding.destroyedEvent)
-                StartEvents_Event(GetMap(), m_goInfo->destructibleBuilding.destroyedEvent, this, caster->GetCharmerOrOwnerOrSelf(), true, caster->GetCharmerOrOwnerOrSelf());
+            if (m_goInfo->destructibleBuilding.destroyedEvent)
+            {
+                if (caster)
+                    StartEvents_Event(GetMap(), m_goInfo->destructibleBuilding.destroyedEvent, this, caster->GetCharmerOrOwnerOrSelf(), true, caster->GetCharmerOrOwnerOrSelf());
+
+                if (caster && caster->GetTypeId() == TYPEID_PLAYER)
+                    if (OutdoorPvP* opvp = sOutdoorPvPMgr.GetScript(((Player*)caster)->GetCachedZoneId()))
+                        opvp->HandleEvent(m_goInfo->destructibleBuilding.destroyedEvent, this, (Player*)caster, spellId);
+            }
         }
     }
     else if (m_useTimes <= m_goInfo->destructibleBuilding.damagedNumHits) // Damaged
@@ -2312,8 +2326,15 @@ void GameObject::ForceGameObjectHealth(int32 diff, Unit* caster)
                 newDisplayId = m_goInfo->destructibleBuilding.damagedDisplayId;
 
             // Start Event if exist
-            if (caster && m_goInfo->destructibleBuilding.damagedEvent)
-                StartEvents_Event(GetMap(), m_goInfo->destructibleBuilding.damagedEvent, this, caster->GetCharmerOrOwnerOrSelf(), true, caster->GetCharmerOrOwnerOrSelf());
+            if (m_goInfo->destructibleBuilding.damagedEvent)
+            {
+                if (caster)
+                    StartEvents_Event(GetMap(), m_goInfo->destructibleBuilding.damagedEvent, this, caster->GetCharmerOrOwnerOrSelf(), true, caster->GetCharmerOrOwnerOrSelf());
+
+                if (caster && caster->GetTypeId() == TYPEID_PLAYER)
+                    if (OutdoorPvP* opvp = sOutdoorPvPMgr.GetScript(((Player*)caster)->GetCachedZoneId()))
+                        opvp->HandleEvent(m_goInfo->destructibleBuilding.damagedEvent, this, (Player*)caster, spellId);
+            }
         }
     }
 

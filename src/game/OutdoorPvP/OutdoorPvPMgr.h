@@ -25,6 +25,7 @@
 
 enum
 {
+    // 60s is too big for battlefield update (but sWorld.getConfig(CONFIG_UINT32_INTERVAL_MAPUPDATE) is too small?)
     TIMER_OPVP_MGR_UPDATE           = MINUTE * IN_MILLISECONDS // 1 minute is enough for us but this might change with wintergrasp support
 };
 
@@ -39,6 +40,11 @@ enum OutdoorPvPTypes
     OPVP_ID_GH,
 
     MAX_OPVP_ID
+};
+
+enum BattlefieldTypes
+{
+    BATTLEFIELD_WG          = 1,
 };
 
 enum OutdoorPvPZones
@@ -73,9 +79,12 @@ enum OutdoorPvPZones
 
     ZONE_ID_NAGRAND                 = 3518,
 
-    ZONE_ID_GRIZZLY_HILLS           = 394
+    ZONE_ID_GRIZZLY_HILLS           = 394,
+
+    ZONE_ID_WINTERGRASP             = 4197,
 };
 
+class BattleField;
 class Player;
 class GameObject;
 class Creature;
@@ -96,6 +105,12 @@ class OutdoorPvPMgr
         // called when player leaves an outdoor pvp area
         void HandlePlayerLeaveZone(Player* player, uint32 zoneId);
 
+        // called when a player enters an outdoor pvp area
+        void HandlePlayerEnterArea(Player* player, uint32 zoneId, uint32 areaId);
+
+        // called when player leaves an outdoor pvp area
+        void HandlePlayerLeaveArea(Player* player, uint32 zoneId, uint32 areaId);
+
         // return assigned outdoor pvp script
         OutdoorPvP* GetScript(uint32 zoneId);
 
@@ -104,6 +119,8 @@ class OutdoorPvPMgr
         // Save and load capture point slider values
         float GetCapturePointSliderValue(uint32 entry, float defaultValue);
         void SetCapturePointSlider(uint32 entry, float value) { m_capturePointSlider[entry] = value; }
+
+        BattleField* GetBattlefieldById(uint32 id);
 
     private:
         // return assigned outdoor pvp script

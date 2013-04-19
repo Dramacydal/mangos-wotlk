@@ -35,6 +35,9 @@ set(LIBRARY_SRCS
     AuctionHouseMgr.h
     Bag.cpp
     Bag.h
+	BattleField/BattleField.cpp
+	BattleField/BattleField.h
+	BattleField/BattlefieldHandler.cpp
     BattleGround/BattleGround.cpp
     BattleGround/BattleGround.h
     BattleGround/BattleGroundAA.cpp
@@ -367,6 +370,7 @@ include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}/vmap
   ${CMAKE_CURRENT_SOURCE_DIR}/AuctionHouseBot
   ${CMAKE_CURRENT_SOURCE_DIR}/BattleGround
+  ${CMAKE_CURRENT_SOURCE_DIR}/BattleField
   ${CMAKE_CURRENT_SOURCE_DIR}/OutdoorPvP
   ${CMAKE_SOURCE_DIR}/dep/include/g3dlite
   ${CMAKE_SOURCE_DIR}/dep/recastnavigation/Detour

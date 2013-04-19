@@ -72,6 +72,25 @@ void OutdoorPvP::SendUpdateWorldState(uint32 field, uint32 value)
     }
 }
 
+/**
+   Function that updates world state for all the players in an outdoor pvp map
+
+   @param   world state it to update
+   @param   value which should update the world state
+   @param   map which player will be affected
+ */
+void OutdoorPvP::SendUpdateWorldStateForMap(uint32 field, uint32 value, Map* map)
+{
+    Map::PlayerList const& pList = map->GetPlayers();
+    for (Map::PlayerList::const_iterator itr = pList.begin(); itr != pList.end(); ++itr)
+    {
+        if (!itr->getSource() || !itr->getSource()->IsInWorld())
+            continue;
+
+        itr->getSource()->SendUpdateWorldState(field, value);
+    }
+}
+
 void OutdoorPvP::HandleGameObjectCreate(GameObject* go)
 {
     // set initial data and activate capture points
@@ -87,12 +106,12 @@ void OutdoorPvP::HandleGameObjectRemove(GameObject* go)
 }
 
 /**
-   Function that handles player kills in the main outdoor pvp zones
+   Function that handles kills in the main outdoor pvp zones
 
-   @param   player who killed another player
+   @param   player who killed
    @param   victim who was killed
  */
-void OutdoorPvP::HandlePlayerKill(Player* killer, Player* victim)
+void OutdoorPvP::HandlePlayerKill(Player* killer, Unit* victim)
 {
     if (Group* group = killer->GetGroup())
     {
@@ -110,29 +129,32 @@ void OutdoorPvP::HandlePlayerKill(Player* killer, Player* victim)
             // creature kills must be notified, even if not inside objective / not outdoor pvp active
             // player kills only count if active and inside objective
             if (groupMember->CanUseCapturePoint())
-                HandlePlayerKillInsideArea(groupMember);
+                HandlePlayerKillInsideArea(groupMember, victim);
         }
     }
     else
     {
         // creature kills must be notified, even if not inside objective / not outdoor pvp active
         if (killer && killer->CanUseCapturePoint())
-            HandlePlayerKillInsideArea(killer);
+            HandlePlayerKillInsideArea(killer, victim);
     }
 }
 
 // apply a team buff for the main and affected zones
-void OutdoorPvP::BuffTeam(Team team, uint32 spellId, bool remove /*= false*/)
+void OutdoorPvP::BuffTeam(Team team, uint32 spellId, bool remove /*= false*/, bool onlyMembers /*= true*/, uint32 area /*= 0*/)
 {
     for (GuidZoneMap::const_iterator itr = m_zonePlayers.begin(); itr != m_zonePlayers.end(); ++itr)
     {
         Player* player = sObjectMgr.GetPlayer(itr->first);
-        if (player && player->GetTeam() == team)
+        if (player && (team == TEAM_NONE || player->GetTeam() == team) && (!onlyMembers || IsMember(player->GetObjectGuid())))
         {
-            if (remove)
-                player->RemoveAurasDueToSpell(spellId);
-            else
-                player->CastSpell(player, spellId, true);
+            if (!area || area == player->GetAreaId())
+            {
+                if (remove)
+                    player->RemoveAurasDueToSpell(spellId);
+                else
+                    player->CastSpell(player, spellId, true);
+            }
         }
     }
 }
